@@ -1,11 +1,12 @@
 let shop = document.getElementById("shop");
 
-let basket = [];
+let basket = JSON.parse(localStorage.getItem("data")) || [];
 
 let generateShop = () => {
   return (shop.innerHTML = shopItemsData
     .map((item) => {
       const { id, name, price, desc, img } = item;
+      const search = basket.find((item) => item.id === id) || [];
       return ` <div id=product-id-${id} class="item">
     <img width="220" src=${img} alt="">
     <div class="details">
@@ -15,7 +16,9 @@ let generateShop = () => {
         <h2>$ ${price} </h2>
         <div class="buttons">
           <i onclick="decrement(${id})" class="bi bi-dash-lg"></i>
-          <div id=${id} class="quantity">0</div>
+          <div id=${id} class="quantity">${
+        search.item === undefined ? 0 : search.item
+      } </div>
           <i onclick="increment(${id})" class="bi bi-plus-lg"></i>
         </div>
       </div>
@@ -32,9 +35,18 @@ let increment = (id) => {
 
   let search = basket.find((item) => item.id === selectedItem.id);
 
-  search
-    ? search.quantity++
-    : basket.push({ id: selectedItem.id, quantity: 1 });
+  if (search === undefined) {
+    basket.push({
+      id: selectedItem.id,
+      quantity: 1,
+    });
+  } else {
+    search.quantity += 1;
+  }
+
+  // search ? search.quantity++ : basket.push({ id: selectedItem.id, quantity: 1 });
+
+  localStorage.setItem("date", JSON.stringify(basket));
   // console.log(basket);
   update(selectedItem.id);
 };
@@ -42,14 +54,18 @@ let increment = (id) => {
 let decrement = (id) => {
   let selectedItem = id;
   let search = basket.find((item) => item.id === selectedItem.id);
-  if (search.quantity > 0) {
-    search.quantity--;
-  } else {
-    return;
+
+  if (search === undefined) return;
+  else if (search.quantity === 0) return;
+  else {
+    search.quantity -= 1;
     // basket.splice(basket.indexOf(search), 1);
   }
+
+  basket = basket.filter((item) => item.quantity !== 0);
   update(selectedItem.id);
   // console.log(basket);
+  localStorage.setItem("date", JSON.stringify(basket));
 };
 
 let update = (id) => {
@@ -60,13 +76,15 @@ let update = (id) => {
 
 let calculation = () => {
   let cartIcon = document.getElementById("cartAmount");
-  console.log(basket.map((item) => item.quantity));
-  console.log(
-    basket
-      .map((item) => item.quantity)
-      .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
-  );
+  // console.log(basket.map((item) => item.quantity));
+  // console.log(
+  //   basket
+  //     .map((item) => item.quantity)
+  //     .reduce((previousValue, currentValue) => previousValue + currentValue, 0)
+  // );
   cartIcon.innerHTML = basket
     .map((item) => item.quantity)
     .reduce((previousValue, currentValue) => previousValue + currentValue, 0);
 };
+
+calculation();
